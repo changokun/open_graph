@@ -2,22 +2,39 @@
 
 class open_graph_image {
 
-	public $data = array('og:image:url' => null, 'og:image:secure_url' => null, 'og:image:type' => null, 'og:image:width' => null, 'og:image:height' => null);
+	const NS = 'image:';
+
+	// public $data = array('og:image:url' => null, 'og:image:secure_url' => null, 'og:image:type' => null, 'og:image:width' => null, 'og:image:height' => null);
+	public $url;
+	public $secure_url;
+	public $type;
+	public $width;
+	public $height;
 
 	public function __construct($url = null) {
-		if( ! empty($url)) $this->data['og:image:url'] = $url;
+		if( ! empty($url)) $this->url = $url;
 	}
 
 	public function __toString() {
-		// if no url, then no tag.
-		if(empty($this->data['og:image:url'])) return '';
-		$data = array_filter($this->data); // remove empties
-		// if we only have the url, we will simplify the tag
-		if(count($data) == 1) $data = array('og:image' => $data['og:image:url']);
+		$data = $this->get_data_structure();
 		return open_graph::get_tags($data);
 	}
 
-	public function set_width($width) { $this->data['og:image:width'] = $width; }
+	public function get_data_structure() {
+		// if no url, then no data.
+		if(empty($this->url)) return array();
+		if(empty($this->secure_url) and empty($this->type) and empty($this->width) and empty($this->height)) {
+			// simplify
+			return array(static::NS . ' ' . $this->url);
+		}
+		$data = array();
+		foreach(array_keys(get_class_vars(get_called_class())) as $property_name) {
+			echo "[$property_name]";
+			if( ! empty($this->$property_name)) $data[] = static::NS . $property_name . ' ' . $this->$property_name;
+		}
+		return $data;
+	}
+
 }
 
 

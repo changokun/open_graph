@@ -2,25 +2,58 @@
 
 abstract class open_graph {
 
+	const ROOT_NS = 'og:';
+	public $title;
 	public $description;
 	public $type; // can only be set by instantiating an extending class.
 	public $image; // an array of open graph image objects
 	public $url; // canonical url.
 
+	protected static $root_properties = array('title', 'type', 'image', 'url', 'description');
+
 	public function __toString() {
-		// validate the basics, at least.
+		// todo validate the basics, at least.
+
+		$data = $this->get_data_structure();
+		return PHP_EOL . '<!-- ' . __CLASS__ . ' -->' . self::get_tags($data);
+	}
+
+	public function json() {
+		return json_encode($this->get_data_structure());
+	}
+
+	private function get_data_structure() {
 		$data = array();
 
-		ob_start();
+		foreach($this as $property => $value) {
+			// echo '<br>' . $property;
+			if(is_scalar($value)) {
+				if(in_array($property, self::$root_properties)) {
+					$data[] = self::ROOT_NS . $property . ' ' . $value;
+				} else {
+					$data[] = static::NS . $property . ' ' . $value;
+				}
+			} elseif(is_array($value)) {
+				foreach($value as $presumed_object) {
+					foreach($presumed_object->get_data_structure() as $datum) {
+						if(in_array($property, self::$root_properties)) {
+							$data[] = self::ROOT_NS . $datum;
+						} else {
+							$data[] = static::NS . $datum;
+						}
+					}
+				}
+			} elseif(is_object($value) and strpos(get_class($value), 'open_graph') === 0) {
+				foreach($value->get_data_structure() as $datum) $data[] = static::NS . $property . ':' . $datum;
+			} else {
+				m::death($value);
+				die('<hr>' . @$something . '<br>Died on line ' . __LINE__ . ' of ' . __FILE__);///////////////////////////////////////////////////////////////////////////////////////////////////
+				trigger_error('bad property in an opengraph object.', E_USER_NOTICE);
+			}
+		}
+		// m::dump($data, 'weee');
 
-		$data['og:description'] = $this->description;
-		$data['og:type'] = $this->type;
-		$data['og:url'] = $this->url;
-
-		echo self::get_tags($data);
-		foreach($this->image as $image) echo (string) $image;
-
-		return ob_get_clean();
+		return $data;
 	}
 
 	/**
@@ -68,9 +101,12 @@ abstract class open_graph {
 	* @param boolean $readable // if true will insert line breaks to make the output more readable
 	* @param boolean $verbose // if true will insert any 'notes' as html comments
 	*/
-	public static function get_tags($data, $readable = true, $verbose = false) {
+	public static function get_tags($data, $readable = true) {
 		$output = $readable ? PHP_EOL : '';
-		foreach($data as $key => $value) {
+		foreach($data as $datum) {
+			$pos = strpos($datum, ' ');
+			$key = substr($datum, 0, $pos);
+			$value = substr($datum, $pos + 1);
 			$output .= '<meta property="'. $key . '" content="' . $value . '" />';
 			$output .= $readable ? PHP_EOL : '';
 		}
