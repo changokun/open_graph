@@ -27,7 +27,9 @@ abstract class open_graph {
 
 		foreach($this as $property => $value) {
 			// echo '<br>' . $property;
-			if(is_scalar($value)) {
+            if(is_null($value)) {
+                // do nothing.
+            } elseif(is_scalar($value)) {
 				if(in_array($property, self::$root_properties)) {
 					$data[] = self::ROOT_NS . $property . ' ' . $value;
 				} else {
