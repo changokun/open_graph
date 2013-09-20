@@ -101,7 +101,7 @@ abstract class open_graph {
 	* @param boolean $readable // if true will insert line breaks to make the output more readable
 	* @param boolean $verbose // if true will insert any 'notes' as html comments
 	*/
-	public static function get_tags($data, $readable = true) {
+	protected static function get_tags($data, $readable = true) {
 		$output = $readable ? PHP_EOL : '';
 		foreach($data as $datum) {
 			$pos = strpos($datum, ' ');
@@ -112,5 +112,11 @@ abstract class open_graph {
 		}
 		return $output;
 	}
+
+    public function get_array_of_tags() {
+        $data = $this->get_data_structure();
+        $str = '<!-- open_graph -->' . PHP_EOL . static::get_tags($data);
+        return array_filter(explode(PHP_EOL, $str));
+    }
 
 }
