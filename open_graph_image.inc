@@ -24,12 +24,12 @@ class open_graph_image {
 		// if no url, then no data.
 		if(empty($this->url)) return array();
 		if(empty($this->secure_url) and empty($this->type) and empty($this->width) and empty($this->height)) {
-			// simplify
-			return array(static::NS . ' ' . $this->url);
+			// simplify - remove the colon and jsut supply the url
+			return array(str_replace(':', '', static::NS) . ' ' . $this->url);
 		}
 		$data = array();
 		foreach(array_keys(get_class_vars(get_called_class())) as $property_name) {
-			echo "[$property_name]";
+			// echo "[$property_name]";
 			if( ! empty($this->$property_name)) $data[] = static::NS . $property_name . ' ' . $this->$property_name;
 		}
 		return $data;
